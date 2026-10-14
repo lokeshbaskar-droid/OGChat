@@ -504,25 +504,76 @@ function registerTool(name, config) {
   });
 }
 
+// Web search: uses DuckDuckGo's HTML results page; no API key required.
+// Keep this server-side so the browser never needs to call the search provider directly.
+function decodeSearchHtml(value) {
+  return String(value || '')
+    .replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;|&#x27;/gi, "'")
+    .replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCharCode(parseInt(n, 16)));
+}
+function stripSearchTags(value) {
+  return decodeSearchHtml(String(value || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim());
+}
+async function searchWeb(query) {
+  const q = String(query || '').trim().slice(0, 300);
+  if (!q) throw new Error('Enter a search query.');
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 12000);
+  try {
+    const response = await fetch('https://html.duckduckgo.com/html/?q=' + encodeURIComponent(q), {
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; OGChat/1.0; +local-assistant)' },
+      signal: controller.signal
+    });
+    if (!response.ok) throw new Error('Search provider returned HTTP ' + response.status);
+    const html = await response.text();
+    const anchors = [...html.matchAll(/<a\b([^>]*class=["'][^"']*result__a[^"']*["'][^>]*)>([\s\S]*?)<\/a>/gi)];
+    const snippets = [...html.matchAll(/<(?:a|div)\b([^>]*class=["'][^"']*result__snippet[^"']*["'][^>]*)>([\s\S]*?)<\/(?:a|div)>/gi)];
+    const results = [];
+    for (let i = 0; i < anchors.length && results.length < 5; i++) {
+      const attrs = anchors[i][1];
+      const hrefMatch = attrs.match(/href=["']([^"']+)["']/i);
+      if (!hrefMatch) continue;
+      let url = decodeSearchHtml(hrefMatch[1]);
+      try {
+        if (url.startsWith('//')) url = 'https:' + url;
+        const parsed = new URL(url);
+        const redirect = parsed.searchParams.get('uddg');
+        if (redirect) url = redirect;
+        if (!/^https?:\/\//i.test(url)) continue;
+      } catch (_) { continue; }
+      const title = stripSearchTags(anchors[i][2]);
+      const snippet = stripSearchTags(snippets[i] ? snippets[i][2] : '');
+      if (title && url) results.push({ title, url, snippet });
+    }
+    if (!results.length) throw new Error('No search results were returned. The provider may be temporarily unavailable or blocking this request.');
+    return { query: q, results };
+  } catch (err) {
+    if (err.name === 'AbortError') throw new Error('Web search timed out after 12 seconds.');
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+app.get('/api/web-search', async (req, res) => {
+  try {
+    const data = await searchWeb(req.query.q);
+    res.setHeader('Cache-Control', 'no-store');
+    res.json(data);
+  } catch (err) {
+    res.status(502).json({ error: 'Web search failed: ' + err.message });
+  }
+});
+
 registerTool('web_search', {
-  description: 'Search the web for information',
+  description: 'Search the public web and return titles, URLs, and snippets',
   enabled: true,
   schema: { query: 'string' },
   execute: async (args) => {
-    try {
-      // Basic DuckDuckGo HTML search for testing
-      const res = await fetch(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(args.query)}`);
-      const html = await res.text();
-      const results = [];
-      const regex = /<a class="result__snippet[^>]*>(.*?)<\/a>/gi;
-      let match;
-      while ((match = regex.exec(html)) !== null && results.length < 5) {
-        results.push(match[1].replace(/<\/?[^>]+(>|$)/g, ""));
-      }
-      return { results };
-    } catch (e) {
-      return { error: e.message };
-    }
+    try { return await searchWeb(args.query); }
+    catch (e) { return { error: e.message, results: [] }; }
   }
 });
 
