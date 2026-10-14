@@ -514,7 +514,51 @@ function decodeSearchHtml(value) {
     .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCharCode(parseInt(n, 16)));
 }
 function stripSearchTags(value) {
-  return decodeSearchHtml(String(value || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim());
+  return decodeSearchHtml(String(value || '').replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim());
+}
+function isPublicWebUrl(value) {
+  try {
+    const u = new URL(value);
+    if (!['http:', 'https:'].includes(u.protocol) || u.username || u.password) return false;
+    const host = u.hostname.toLowerCase().replace(/^\[|\]$/g, '');
+    if (!host || host === 'localhost' || host.endsWith('.localhost') || host.endsWith('.local') ||
+        host === '::1' || host.startsWith('fe80:') || host.startsWith('fc') || host.startsWith('fd')) return false;
+    if (/^(10\.|127\.|192\.168\.|169\.254\.|0\.)/.test(host) ||
+        /^172\.(1[6-9]|2\d|3[01])\./.test(host)) return false;
+    return true;
+  } catch (_) { return false; }
+}
+async function fetchWebpageText(url) {
+  if (!isPublicWebUrl(url)) return '';
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 7000);
+  try {
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; OGChat/1.0; +local-assistant)',
+        'Accept': 'text/html,application/xhtml+xml,text/plain;q=0.9'
+      },
+      redirect: 'error',
+      signal: controller.signal
+    });
+    const type = (response.headers.get('content-type') || '').toLowerCase();
+    if (!response.ok || !(type.includes('text/html') || type.includes('text/plain') || type.includes('application/xhtml'))) return '';
+    const raw = await response.text();
+    const bounded = raw.slice(0, 600000);
+    const text = type.includes('text/plain') ? bounded : bounded
+      .replace(/<(script|style|nav|footer|header|noscript|svg|form)\b[^>]*>[\s\S]*?<\/\1>/gi, ' ')
+      .replace(/<(article|main)\b[^>]*>/gi, '\n')
+      .replace(/<\/(p|div|li|h[1-6]|article|main|section|tr)>/gi, '\n')
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<[^>]*>/g, ' ');
+    return decodeSearchHtml(text).replace(/[ \t]+/g, ' ').replace(/\n\s*\n+/g, '\n').trim().slice(0, 7000);
+  } catch (_) {
+    return '';
+  } finally {
+    clearTimeout(timer);
+  }
 }
 async function searchWeb(query) {
   const q = String(query || '').trim().slice(0, 300);
@@ -532,8 +576,7 @@ async function searchWeb(query) {
     const snippets = [...html.matchAll(/<(?:a|div)\b([^>]*class=["'][^"']*result__snippet[^"']*["'][^>]*)>([\s\S]*?)<\/(?:a|div)>/gi)];
     const results = [];
     for (let i = 0; i < anchors.length && results.length < 5; i++) {
-      const attrs = anchors[i][1];
-      const hrefMatch = attrs.match(/href=["']([^"']+)["']/i);
+      const hrefMatch = anchors[i][1].match(/href=["']([^"']+)["']/i);
       if (!hrefMatch) continue;
       let url = decodeSearchHtml(hrefMatch[1]);
       try {
@@ -541,13 +584,17 @@ async function searchWeb(query) {
         const parsed = new URL(url);
         const redirect = parsed.searchParams.get('uddg');
         if (redirect) url = redirect;
-        if (!/^https?:\/\//i.test(url)) continue;
       } catch (_) { continue; }
+      if (!isPublicWebUrl(url)) continue;
       const title = stripSearchTags(anchors[i][2]);
       const snippet = stripSearchTags(snippets[i] ? snippets[i][2] : '');
-      if (title && url) results.push({ title, url, snippet });
+      if (title && url && !results.some(r => r.url === url)) results.push({ title, url, snippet, content: '' });
     }
     if (!results.length) throw new Error('No search results were returned. The provider may be temporarily unavailable or blocking this request.');
+    // Fetch a few actual pages, not just snippets. Pages are untrusted and may contain prompt injection.
+    await Promise.all(results.slice(0, 3).map(async item => {
+      item.content = await fetchWebpageText(item.url);
+    }));
     return { query: q, results };
   } catch (err) {
     if (err.name === 'AbortError') throw new Error('Web search timed out after 12 seconds.');
@@ -556,7 +603,6 @@ async function searchWeb(query) {
     clearTimeout(timer);
   }
 }
-
 app.get('/api/web-search', async (req, res) => {
   try {
     const data = await searchWeb(req.query.q);
