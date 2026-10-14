@@ -433,7 +433,7 @@
       const prompt = prior[userIndex].content;
       const context = prior.slice(0, userIndex);
       renderMessages(context);
-      sendMessage(prompt, context, [], []);
+      sendMessage(prompt, context, [], [], prompt);
     });
     return msgEl;
   }
@@ -590,12 +590,12 @@
     // Quick-fix for the text extraction issue: we just use the raw state for new messages
     // and rely on server history for reloads. 
     // We'll pass the correct api array directly.
-    sendMessage(fullContent, previousMessages, attachmentMeta, images);
+    sendMessage(fullContent, previousMessages, attachmentMeta, images, content);
   }
 
-  async function sendMessage(content, previousMessages = [], attachments = [], images = []) {
+  async function sendMessage(content, previousMessages = [], attachments = [], images = [], displayContent = content) {
     const userIdx = previousMessages.length;
-    appendMessage('user', content, attachments, userIdx);
+    appendMessage('user', displayContent, attachments, userIdx);
     const apiMessages = [...previousMessages, { role: 'user', content }];
     if (images.length > 0) {
       apiMessages[apiMessages.length - 1].images = images;
