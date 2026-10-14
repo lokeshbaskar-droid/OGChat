@@ -603,6 +603,7 @@
     const assistantIdx = apiMessages.length;
     const assistantEl = appendMessage('assistant', '', null, assistantIdx);
     const contentEl = assistantEl.querySelector('.message-content');
+    contentEl.innerHTML = '<p class="text-shimmer-loading" role="status" aria-live="polite">Thinking…</p>';
     
     scrollToBottom();
     state.isGenerating = true;
