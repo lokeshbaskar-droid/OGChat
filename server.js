@@ -510,11 +510,11 @@ function decodeSearchHtml(value) {
   return String(value || '')
     .replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;|&#x27;/gi, "'")
     .replace(/&lt;/g, '<').replace(/&gt;/g, '>')
-    .replace(/&#(\\d+);/g, (_, n) => String.fromCharCode(Number(n)))
+    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
     .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCharCode(parseInt(n, 16)));
 }
 function stripSearchTags(value) {
-  return decodeSearchHtml(String(value || '').replace(/<[^>]*>/g, ' ').replace(/\\s+/g, ' ').trim());
+  return decodeSearchHtml(String(value || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim());
 }
 async function searchWeb(query) {
   const q = String(query || '').trim().slice(0, 300);
@@ -528,8 +528,8 @@ async function searchWeb(query) {
     });
     if (!response.ok) throw new Error('Search provider returned HTTP ' + response.status);
     const html = await response.text();
-    const anchors = [...html.matchAll(/<a\\b([^>]*class=["'][^"']*result__a[^"']*["'][^>]*)>([\\s\\S]*?)<\\/a>/gi)];
-    const snippets = [...html.matchAll(/<(?:a|div)\\b([^>]*class=["'][^"']*result__snippet[^"']*["'][^>]*)>([\\s\\S]*?)<\\/(?:a|div)>/gi)];
+    const anchors = [...html.matchAll(/<a\b([^>]*class=["'][^"']*result__a[^"']*["'][^>]*)>([\s\S]*?)<\/a>/gi)];
+    const snippets = [...html.matchAll(/<(?:a|div)\b([^>]*class=["'][^"']*result__snippet[^"']*["'][^>]*)>([\s\S]*?)<\/(?:a|div)>/gi)];
     const results = [];
     for (let i = 0; i < anchors.length && results.length < 5; i++) {
       const attrs = anchors[i][1];
@@ -541,7 +541,7 @@ async function searchWeb(query) {
         const parsed = new URL(url);
         const redirect = parsed.searchParams.get('uddg');
         if (redirect) url = redirect;
-        if (!/^https?:\\/\\//i.test(url)) continue;
+        if (!/^https?:\/\//i.test(url)) continue;
       } catch (_) { continue; }
       const title = stripSearchTags(anchors[i][2]);
       const snippet = stripSearchTags(snippets[i] ? snippets[i][2] : '');
