@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OGChat</title>
+  <title>OGChat — AI Workspace</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -96,10 +96,39 @@
           
           <!-- Welcome Screen (Empty State) -->
           <div id="welcomeScreen" class="welcome-screen">
-            <div class="welcome-logo">
-               <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+            <div class="welcome-hero">
+              <div class="hero-copy">
+                <div class="eyebrow"><span class="pulse-dot"></span> YOUR LOCAL AI WORKSPACE</div>
+                <h2>Think bigger.<br><span>Build anything.</span></h2>
+                <p>Your ideas, powered by OGChat.</p>
+              </div>
+              <div class="hero-mascot" aria-label="OGChat robot mascot">
+                <div class="mascot-orbit orbit-one"></div><div class="mascot-orbit orbit-two"></div>
+                <div class="mascot-halo"></div>
+                <svg class="robot-art" viewBox="0 0 240 240" role="img" aria-label="Friendly glossy robot with lime green eyes">
+                  <defs><linearGradient id="botBody" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#777c72"/><stop offset=".45" stop-color="#343831"/><stop offset="1" stop-color="#171a17"/></linearGradient><linearGradient id="botFace" x1="0" y1="0" x2=".8" y2="1"><stop stop-color="#d9ddd0"/><stop offset=".5" stop-color="#9da394"/><stop offset="1" stop-color="#5e655a"/></linearGradient><linearGradient id="limeEye" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e5ff91"/><stop offset=".45" stop-color="#c6ff3d"/><stop offset="1" stop-color="#65a900"/></linearGradient><radialGradient id="botGlow"><stop stop-color="#c6ff3d" stop-opacity=".35"/><stop offset="1" stop-color="#c6ff3d" stop-opacity="0"/></radialGradient></defs>
+                  <ellipse cx="120" cy="210" rx="78" ry="20" fill="url(#botGlow)"/><ellipse cx="120" cy="206" rx="43" ry="10" fill="#090a09" opacity=".8"/>
+                  <path d="M78 164 Q120 145 162 164 L177 207 Q120 228 63 207Z" fill="url(#botBody)" stroke="#8e9683" stroke-opacity=".45" stroke-width="2"/>
+                  <path d="M95 170 L88 202 M145 170 L152 202" stroke="#c6ff3d" stroke-opacity=".6" stroke-width="3" stroke-linecap="round"/>
+                  <path d="M72 87 Q65 42 120 38 Q175 42 168 87 L177 127 Q174 165 143 177 L97 177 Q66 165 63 127Z" fill="url(#botFace)" stroke="#b9c0ad" stroke-width="2"/>
+                  <path d="M72 91 Q64 48 120 43 Q159 43 167 75 Q140 58 112 63 Q91 66 72 91Z" fill="#eef1e5" opacity=".45"/>
+                  <ellipse cx="91" cy="115" rx="19" ry="24" fill="#262a23"/><ellipse cx="149" cy="115" rx="19" ry="24" fill="#262a23"/>
+                  <ellipse cx="93" cy="116" rx="12" ry="17" fill="url(#limeEye)"/><ellipse cx="147" cy="116" rx="12" ry="17" fill="url(#limeEye)"/>
+                  <ellipse cx="96" cy="110" rx="4" ry="6" fill="#f4ffd7"/><ellipse cx="150" cy="110" rx="4" ry="6" fill="#f4ffd7"/>
+                  <path d="M103 148 Q120 159 137 148" fill="none" stroke="#3c4436" stroke-width="4" stroke-linecap="round"/>
+                  <circle cx="61" cy="117" r="10" fill="url(#botBody)" stroke="#a9b09e" stroke-width="2"/><circle cx="179" cy="117" r="10" fill="url(#botBody)" stroke="#a9b09e" stroke-width="2"/>
+                  <path d="M82 75 Q99 57 120 60" fill="none" stroke="#fff" stroke-opacity=".4" stroke-width="4" stroke-linecap="round"/>
+                  <circle cx="184" cy="63" r="5" fill="#c6ff3d"/><circle cx="56" cy="160" r="3" fill="#c6ff3d"/>
+                </svg>
+                <span class="mascot-caption">READY WHEN YOU ARE</span>
+              </div>
             </div>
-            <h2>How can I help you today?</h2>
+            <div class="quick-actions">
+              <button class="quick-action" data-prompt="Help me write and debug code."><span class="quick-icon">⌘</span><span><b>Code & build</b><small>Write, debug, improve</small></span><span class="quick-arrow">↗</span></button>
+              <button class="quick-action" data-prompt="Help me analyze a PDF document."><span class="quick-icon">▤</span><span><b>Analyze a PDF</b><small>Find answers in documents</small></span><span class="quick-arrow">↗</span></button>
+              <button class="quick-action" data-prompt="Search the web and summarize reliable sources about: "><span class="quick-icon">◎</span><span><b>Explore the web</b><small>Research with sources</small></span><span class="quick-arrow">↗</span></button>
+              <button class="quick-action" data-prompt="Explain this topic step by step with an example: "><span class="quick-icon">✳</span><span><b>Learn something</b><small>Clear explanations</small></span><span class="quick-arrow">↗</span></button>
+            </div>
           </div>
 
           <!-- Messages List -->
