@@ -96,10 +96,18 @@
           
           <!-- Welcome Screen (Empty State) -->
           <div id="welcomeScreen" class="welcome-screen">
-            <div class="welcome-logo">
-               <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+            <div class="welcome-eyebrow"><span class="welcome-live-dot"></span> PRIVATE • LOCAL • YOURS</div>
+            <div class="welcome-mark" aria-hidden="true">
+              <svg viewBox="0 0 64 64" width="54" height="54" fill="none"><path d="M32 5 57 19.5v25L32 59 7 44.5v-25L32 5Z" stroke="currentColor" stroke-width="2.5"/><path d="M20 25.5 32 19l12 6.5v13L32 45l-12-6.5v-13Z" stroke="currentColor" stroke-width="2.5"/><path d="M32 19v26M20 25.5l24 13M44 25.5l-24 13" stroke="currentColor" stroke-width="1.5" opacity=".7"/></svg>
             </div>
-            <h2>How can I help you today?</h2>
+            <h2>Intelligence, <span>on your terms.</span></h2>
+            <p class="welcome-description">Your private AI workspace. Ask anything, explore ideas, and keep your conversations on your machine.</p>
+            <div class="suggestion-grid">
+              <button class="suggestion-card" type="button" data-prompt="Explain a complex topic to me with a simple example."><span class="suggestion-icon">✳</span><span><strong>Learn something</strong><small>Break down a complex topic</small></span><span class="suggestion-arrow">↗</span></button>
+              <button class="suggestion-card" type="button" data-prompt="Help me brainstorm creative ideas for a project."><span class="suggestion-icon">◇</span><span><strong>Brainstorm ideas</strong><small>Find a fresh perspective</small></span><span class="suggestion-arrow">↗</span></button>
+              <button class="suggestion-card" type="button" data-prompt="Help me write and improve a piece of writing."><span class="suggestion-icon">⌘</span><span><strong>Write something</strong><small>Draft, edit, and refine</small></span><span class="suggestion-arrow">↗</span></button>
+              <button class="suggestion-card" type="button" data-prompt="Help me debug code and explain the fix step by step."><span class="suggestion-icon">⌁</span><span><strong>Build with code</strong><small>Debug and create together</small></span><span class="suggestion-arrow">↗</span></button>
+            </div>
           </div>
 
           <!-- Messages List -->
