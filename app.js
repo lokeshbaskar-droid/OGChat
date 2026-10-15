@@ -603,7 +603,20 @@
     const assistantIdx = apiMessages.length;
     const assistantEl = appendMessage('assistant', '', null, assistantIdx);
     const contentEl = assistantEl.querySelector('.message-content');
-    
+    let spokesLoader = null;
+    if (!state.webSearchEnabled) {
+      spokesLoader = document.createElement('div');
+      spokesLoader.className = 'spokes-loading-wrapper';
+      spokesLoader.setAttribute('role', 'status');
+      spokesLoader.setAttribute('aria-label', 'Generating response');
+      spokesLoader.innerHTML = '<svg class="spokes-spinner" viewBox="0 0 40 40" aria-hidden="true">' +
+        Array.from({length:12},(_,i)=>{const a=(i*Math.PI)/6;const x1=20+10*Math.cos(a),y1=20+10*Math.sin(a),x2=20+16*Math.cos(a),y2=20+16*Math.sin(a);return '<line x1="'+x1.toFixed(2)+'" y1="'+y1.toFixed(2)+'" x2="'+x2.toFixed(2)+'" y2="'+y2.toFixed(2)+'" opacity="'+(0.2+i*0.065).toFixed(2)+'"/>';}).join('') +
+        '</svg><span>Thinking locally…</span>';
+      contentEl.appendChild(spokesLoader);
+    } else {
+      contentEl.innerHTML = '<p class="web-search-status">Searching sources and preparing a response…</p>';
+    }
+
     scrollToBottom();
     state.isGenerating = true;
     updateSendButton();
@@ -641,6 +654,7 @@
           const piece = parsed.message && typeof parsed.message.content === 'string' ? parsed.message.content : '';
           if (piece) {
             fullResponse += piece;
+            if (spokesLoader && spokesLoader.isConnected) spokesLoader.remove();
             contentEl.innerHTML = renderMarkdown(fullResponse) + '<span class="streaming-cursor"></span>';
             scrollToBottom();
           }
@@ -805,6 +819,14 @@
       showToast('Current chat cleared. Nothing was saved to chat history.');
     });
 
+    document.querySelectorAll('.suggestion-card[data-prompt]').forEach(card => {
+      card.addEventListener('click', () => {
+        dom.messageInput.value = card.dataset.prompt || '';
+        autoResizeInput();
+        updateSendBtnState();
+        dom.messageInput.focus();
+      });
+    });
     dom.messageInput.addEventListener('input', () => { autoResizeInput(); updateSendBtnState(); });
     dom.messageInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
