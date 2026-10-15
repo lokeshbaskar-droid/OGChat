@@ -772,6 +772,20 @@
 
   // ─── Event Bindings ─────────────────────────────────────────
   function bindEvents() {
+    // Welcome-screen shortcuts: populate the composer without bypassing the normal send flow.
+    document.querySelectorAll('.quick-action[data-prompt]').forEach(button => {
+      button.addEventListener('click', () => {
+        const prompt = button.dataset.prompt || '';
+        dom.messageInput.value = prompt;
+        autoResizeInput();
+        updateSendBtnState();
+        if (/Explore the web/i.test(button.innerText) && dom.webSearchToggle && !state.webSearchEnabled) {
+          dom.webSearchToggle.click();
+        }
+        dom.messageInput.focus();
+        dom.messageInput.setSelectionRange(prompt.length, prompt.length);
+      });
+    });
     dom.sidebarToggleClose.addEventListener('click', () => dom.sidebar.classList.add('collapsed'));
     dom.sidebarToggleOpen.addEventListener('click', () => dom.sidebar.classList.remove('collapsed'));
     dom.newChatBtn.addEventListener('click', () => { showWelcomeView(); dom.messageInput.focus(); });
